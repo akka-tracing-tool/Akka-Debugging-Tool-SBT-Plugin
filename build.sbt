@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % Slf4jVersion,
   "org.slf4j" % "log4j-over-slf4j" % Slf4jVersion % "test",
   "org.aspectj" % "aspectjweaver" % AspectJVersion,
-  "org.aspectj" % "aspectjrt" % AspectJVersion
+  "org.aspectj" % "aspectjrt" % AspectJVersion,
+  "org.reflections" % "reflections" % "0.9.10"
 )
 
 lazy val pluginProject = project in file(".")
