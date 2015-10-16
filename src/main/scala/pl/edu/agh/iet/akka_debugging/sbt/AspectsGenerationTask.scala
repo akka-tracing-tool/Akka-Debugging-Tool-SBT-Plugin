@@ -23,7 +23,7 @@ object AspectsGenerationTask {
         try {
           val pConf = config.getConfig(s"akka_debugging.$p")
           val packageActors = pConf.getStringListOr("actors", () =>
-            getClassesFromPackage(AnyRef.getClass, p).map((c) => c.getSimpleName))
+            getClassesFromPackage(akka.actor.Actor.getClass, p).map((`class`) => `class`.getSimpleName))
           println(packageActors)
         } catch {
           case e: Throwable => println(e)
@@ -34,5 +34,8 @@ object AspectsGenerationTask {
       case e: Throwable => throw new IllegalArgumentException(s"Couldn't load configuration file $configurationFile", e)
     }
   }
+
+  private[this] def generateWithin(actors: List[String]): String =
+    actors.map(actor => s"within($actor)").mkString("(", " || ", ")")
 }
 
