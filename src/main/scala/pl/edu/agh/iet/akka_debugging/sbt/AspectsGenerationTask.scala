@@ -30,7 +30,7 @@ object AspectsGenerationTask {
         line
       }
     })
-    val outputFile = new File(s"$sourcesDir/akka/MethodBang.scala")
+    val outputFile = new File(s"$sourcesDir/scala/akka/MethodBang.scala")
     write(outputFile, output.mkString(Newline))
   }
 
