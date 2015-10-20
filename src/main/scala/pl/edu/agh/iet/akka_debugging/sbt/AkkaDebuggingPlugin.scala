@@ -20,7 +20,7 @@ object AkkaDebuggingPlugin extends AutoPlugin {
       aspectsConfigurationFile := "akka_debugging.conf",
       generateAspectsTask := {
         println("YEAH")
-        generateAspects(resourceDirectory.value, aspectsConfigurationFile.value)
+        generateAspects(sourceDirectory.value, resourceDirectory.value, aspectsConfigurationFile.value)
       }
     )
   )
