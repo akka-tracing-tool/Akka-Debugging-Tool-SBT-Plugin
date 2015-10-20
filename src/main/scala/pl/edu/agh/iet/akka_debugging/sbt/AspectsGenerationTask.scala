@@ -47,7 +47,7 @@ object AspectsGenerationTask {
           //            getClassesFromPackage(akka.actor.Actor.getClass, p).map((`class`) => `class`.getSimpleName))
           val packageActors = pConf.getStringList("actors")
           println(packageActors)
-          actors ++= packageActors.asScala.toList
+          actors ++= packageActors.asScala.toList.map((actor) => s"$p.$actor")
         } catch {
           case e: Throwable =>
             logger.error(s"Cannot read actors for package $p", e)
