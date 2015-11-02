@@ -5,7 +5,6 @@ import java.io.File
 import com.typesafe.config.ConfigException.Missing
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
-import pl.edu.agh.iet.akka_debugging.sbt.ReflectionUtils._
 import sbt.IO._
 
 import scala.collection.JavaConversions._
@@ -71,8 +70,8 @@ object AspectsGenerationTask {
 
     } catch {
       case e: Missing =>
-        actors ++= getClassesFromPackage(akka.actor.Actor.getClass, `package`).map(
-          (`class`) => s"${`package`}.${`class`.getSimpleName}")
+//        actors ++= getClassesFromPackage(akka.actor.Actor.getClass, `package`).map(
+//          (`class`) => s"${`package`}.${`class`.getSimpleName}")
     }
     actors.toList
   }

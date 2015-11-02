@@ -8,7 +8,7 @@ val Slf4jVersion = "1.7.12"
 val ConfigVersion = "1.3.0"
 val AspectJVersion = "1.7.2"
 val AkkaVersion = "2.3.9"
-val ReflectionsVersion = "0.9.10"
+val ScalaTestVersion = "2.2.4"
 
 name := "akka-debugging-sbt"
 
@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   "org.aspectj" % "aspectjweaver" % AspectJVersion,
   "org.aspectj" % "aspectjrt" % AspectJVersion,
   "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
-  "org.reflections" % "reflections" % ReflectionsVersion
+  "org.scalatest" % "scalatest_2.10" % ScalaTestVersion % "test"
 )
 
 lazy val pluginProject = project in file(".")
