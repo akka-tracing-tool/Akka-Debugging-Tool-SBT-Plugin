@@ -10,6 +10,7 @@ trait ScalaClassDefinitionParser extends RegexParsers with ScalaClassDefinitionS
   val _class = ".*?class".r
   val _with = "with".r
   val _extends = "extends".r
+  val _anything = ".*".r
 
   def name: Parser[String] = _name ^^ {
     s => s
@@ -35,24 +36,27 @@ trait ScalaClassDefinitionParser extends RegexParsers with ScalaClassDefinitionS
       ClassDef(className, List())
   }
 
+  def classDefinitions: Parser[List[ClassDef]] = rep(classDef) ~ _anything ^^ {
+    case l ~ _ => l
+  }
+
 }
 
 object ScalaClassDefinitionParser extends ScalaClassDefinitionParser {
 
-  def parseClassDef(s: CharSequence): ClassDef = {
-    parseClassDef(new CharSequenceReader(s))
+  def parseClassDefs(s: CharSequence): List[ClassDef] = {
+    parseClassDefs(new CharSequenceReader(s))
   }
 
-  def parseClassDef(input: CharSequenceReader): ClassDef = {
+  def parseClassDefs(input: CharSequenceReader): List[ClassDef] = {
     parsePhrase(input) match {
       case Success(t, _) => t
-      case NoSuccess(msg, next) => throw new IllegalArgumentException(
-        "Could not parse '" + input + "' near '" + next.pos.longString + ": " + msg)
+      case NoSuccess(_, _) => List()
     }
   }
 
-  def parsePhrase(input: CharSequenceReader): ParseResult[ClassDef] = {
-    phrase(classDef)(input)
+  def parsePhrase(input: CharSequenceReader): ParseResult[List[ClassDef]] = {
+    phrase(classDefinitions)(input)
   }
 
 }
