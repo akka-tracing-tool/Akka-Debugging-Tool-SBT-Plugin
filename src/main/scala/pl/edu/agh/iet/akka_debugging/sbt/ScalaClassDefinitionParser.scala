@@ -1,16 +1,16 @@
 package pl.edu.agh.iet.akka_debugging.sbt
 
-import scala.util.parsing.combinator.RegexParsers
+import scala.util.parsing.combinator.JavaTokenParsers
 import scala.util.parsing.input.CharSequenceReader
 
-trait ScalaClassDefinitionParser extends RegexParsers with ScalaClassDefinitionSyntax {
+trait ScalaClassDefinitionParser extends JavaTokenParsers with ScalaClassDefinitionSyntax {
 
-  val _name = """[a-zA-z~!#%$-+*/\\][a-zA-Z0-9_~!#%$-+*/\\]*""".r
-  val _eof = """\z""".r
+  val _name = ident
   val _class = ".*?class".r
   val _with = "with".r
-  val _extends = "extends".r
+  val _extends = ".*?extends".r
   val _anything = ".*".r
+  val _first_with = ".*?with".r
 
   def name: Parser[String] = _name ^^ {
     s => s
@@ -25,7 +25,7 @@ trait ScalaClassDefinitionParser extends RegexParsers with ScalaClassDefinitionS
     case _ ~ name ~ None => List(name)
   }
 
-  def withClause: Parser[List[String]] = "with" ~ listOfNames ^^ {
+  def withClause: Parser[List[String]] = _first_with ~ listOfNames ^^ {
     case _ ~ list => list
   }
 

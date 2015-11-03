@@ -37,7 +37,7 @@ class ScalaClassDefinitionParserSpec extends FlatSpec with Matchers {
   }
 
   it should "parse 2 scala class definitions with stuff after them" in {
-    parseClassDefs("class Test extends Test2 with Test3 class A extends B with C with D <TROLL>") shouldBe
+    parseClassDefs("class Test(x: Int) extends Test2(x) with Test3 class A extends B with C with D <TROLL>") shouldBe
       List(ClassDef("Test", List("Test2", "Test3")), ClassDef("A", List("B", "C", "D")))
   }
 
