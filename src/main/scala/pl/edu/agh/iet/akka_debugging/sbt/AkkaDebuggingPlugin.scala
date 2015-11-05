@@ -23,7 +23,7 @@ object AkkaDebuggingPlugin extends AutoPlugin {
         println("YEAH")
         generateAspects(sourceDirectory.value, resourceDirectory.value,
           aspectsConfigurationFile.value, sources.value)
-        findTracedActors("pl.edu.agh.iet.akka_debugging.sbt", sources.value)
+        println(findTracedActors("pl.edu.agh.iet.akka_debugging.sbt", sources.value))
       }
     )
   )
