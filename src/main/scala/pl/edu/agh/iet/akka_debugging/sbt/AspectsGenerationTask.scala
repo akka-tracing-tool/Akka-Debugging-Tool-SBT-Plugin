@@ -17,7 +17,8 @@ object AspectsGenerationTask {
   private[this] val logger = LoggerFactory.getLogger(getClass)
 
   //TODO: Hash configFile
-  def generateAspects(sourcesDir: File, resourcesDir: File, configurationFile: String): Unit = {
+  def generateAspects(sourcesDir: File, resourcesDir: File,
+                      configurationFile: String, sources: Seq[File]): Unit = {
     println(aspectTemplateFile)
     val configFile = new File(s"${resourcesDir.getAbsolutePath}/$configurationFile")
     val actorsList = getListOfActors(configFile)

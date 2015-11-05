@@ -3,6 +3,7 @@ package pl.edu.agh.iet.akka_debugging.sbt
 import sbt._
 import sbt.Keys._
 import AspectsGenerationTask._
+import TracedActorsFinder._
 
 object AkkaDebuggingPlugin extends AutoPlugin {
 
@@ -20,7 +21,9 @@ object AkkaDebuggingPlugin extends AutoPlugin {
       aspectsConfigurationFile := "akka_debugging.conf",
       generateAspectsTask := {
         println("YEAH")
-        generateAspects(sourceDirectory.value, resourceDirectory.value, aspectsConfigurationFile.value)
+        generateAspects(sourceDirectory.value, resourceDirectory.value,
+          aspectsConfigurationFile.value, sources.value)
+        findTracedActors("pl.edu.agh.iet.akka_debugging.sbt", sources.value)
       }
     )
   )
