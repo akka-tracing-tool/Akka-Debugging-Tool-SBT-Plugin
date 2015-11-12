@@ -25,7 +25,6 @@ object AkkaDebuggingPlugin extends AutoPlugin {
       generateAspectsTask := {
         generateAspects(sourceDirectory.value, resourceDirectory.value,
           aspectsConfigurationFile.value, sources.value)
-        println(findTracedActors("pl.edu.agh.iet.akka_debugging.examples.actors", sources.value))
         logger.info("Aspects generated successfully")
       }
     )

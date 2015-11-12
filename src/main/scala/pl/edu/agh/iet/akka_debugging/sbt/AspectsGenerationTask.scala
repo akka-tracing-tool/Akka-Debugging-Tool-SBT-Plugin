@@ -38,7 +38,7 @@ object AspectsGenerationTask {
     write(outputFile, output.mkString(Newline))
   }
 
-  //TODO: Implementation of "*" and no actors list
+  //TODO: Implementation of no actors list
   private[this] def getListOfActors(configFile: File, sources: Seq[File]): List[String] = {
     val config = ConfigFactory.parseFile(configFile)
     val actors = mutable.MutableList[String]()
@@ -49,7 +49,6 @@ object AspectsGenerationTask {
           val pConf = config.getConfig(s"akka_debugging.$p")
           val packageActors = pConf.getStringListOr("actors", () =>
             TracedActorsFinder.findTracedActors(p, sources))
-          println(packageActors)
           actors ++= packageActors.toList.map((actor) => s"$p.$actor")
         } catch {
           case e: Throwable =>
