@@ -9,6 +9,7 @@ val ConfigVersion = "1.3.0"
 val AspectJVersion = "1.7.2"
 val AkkaVersion = "2.3.9"
 val ScalaTestVersion = "2.2.4"
+val CommonsCodecVersion = "1.9"
 
 name := "akka-debugging-sbt"
 
@@ -25,7 +26,8 @@ libraryDependencies ++= Seq(
   "org.aspectj" % "aspectjweaver" % AspectJVersion,
   "org.aspectj" % "aspectjrt" % AspectJVersion,
   "com.typesafe.akka" %% "akka-actor" % AkkaVersion,
-  "org.scalatest" % "scalatest_2.10" % ScalaTestVersion % "test"
+  "org.scalatest" % "scalatest_2.10" % ScalaTestVersion % "test",
+  "commons-codec" % "commons-codec" % CommonsCodecVersion
 )
 
 lazy val pluginProject = project in file(".")

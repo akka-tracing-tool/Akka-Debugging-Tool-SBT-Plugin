@@ -1,9 +1,10 @@
 package pl.edu.agh.iet.akka_debugging.sbt
 
-import sbt._
+import org.slf4j.LoggerFactory
+import pl.edu.agh.iet.akka_debugging.sbt.AspectsGenerationTask._
+import pl.edu.agh.iet.akka_debugging.sbt.TracedActorsFinder._
 import sbt.Keys._
-import AspectsGenerationTask._
-import TracedActorsFinder._
+import sbt._
 
 object AkkaDebuggingPlugin extends AutoPlugin {
 
@@ -16,14 +17,16 @@ object AkkaDebuggingPlugin extends AutoPlugin {
 
   import Settings._
 
+  val logger = LoggerFactory.getLogger(getClass)
+
   override lazy val projectSettings = inConfig(Compile)(
     Seq(
       aspectsConfigurationFile := "akka_debugging.conf",
       generateAspectsTask := {
-        println("YEAH")
         generateAspects(sourceDirectory.value, resourceDirectory.value,
           aspectsConfigurationFile.value, sources.value)
         println(findTracedActors("pl.edu.agh.iet.akka_debugging.examples.actors", sources.value))
+        logger.info("Aspects generated successfully")
       }
     )
   )

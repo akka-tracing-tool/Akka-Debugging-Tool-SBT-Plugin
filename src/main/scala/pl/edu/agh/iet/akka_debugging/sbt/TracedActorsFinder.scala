@@ -20,10 +20,11 @@ object TracedActorsFinder {
 
     for (file <- sources) {
       if (file.getAbsoluteFile.getParent.endsWith(packagePath)) {
-        val classDefs = parseClassDefs(Source.fromFile(file).mkString)
+        val fileContents = Source.fromFile(file).mkString
+        val classDefs = parseClassDefs(fileContents)
         for (classDef <- classDefs) {
           if (classDef.traits.contains(TRAIT_NAME)) {
-            actors += s"${`package`}.${classDef.name}"
+            actors += classDef.name
           }
         }
       }

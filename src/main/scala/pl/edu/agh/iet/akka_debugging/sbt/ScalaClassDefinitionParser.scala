@@ -6,11 +6,11 @@ import scala.util.parsing.input.CharSequenceReader
 trait ScalaClassDefinitionParser extends JavaTokenParsers with ScalaClassDefinitionSyntax {
 
   val _name = ident
-  val _class = ".*?class".r
-  val _with = "with".r
-  val _extends = ".*?extends".r
-  val _anything = ".*".r
-  val _first_with = ".*?with".r
+  val _class = """(?s).*?class\s""".r
+  val _with = """with\s""".r
+  val _extends = """(?s).*?extends\s""".r
+  val _anything = "(?s).*".r
+  val _first_with = """(?s).*?with\s""".r
 
   def name: Parser[String] = _name ^^ {
     s => s

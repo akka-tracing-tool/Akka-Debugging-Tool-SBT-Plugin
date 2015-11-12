@@ -2,16 +2,18 @@ package pl.edu.agh.iet.akka_debugging.sbt
 
 import java.io.File
 
-import com.typesafe.config.ConfigException.Missing
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.ConfigFactory
+import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import sbt.IO._
 
 import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.io.Source
 
 object AspectsGenerationTask {
+
+  import Implicits._
 
   private[this] val aspectTemplateFile = new File(getClass.getClassLoader.getResource("MethodBang.template").getFile)
   private[this] val logger = LoggerFactory.getLogger(getClass)
@@ -19,9 +21,11 @@ object AspectsGenerationTask {
   //TODO: Hash configFile
   def generateAspects(sourcesDir: File, resourcesDir: File,
                       configurationFile: String, sources: Seq[File]): Unit = {
-    println(aspectTemplateFile)
     val configFile = new File(s"${resourcesDir.getAbsolutePath}/$configurationFile")
-    val actorsList = getListOfActors(configFile)
+    val configFileContents = Source.fromFile(configFile).mkString
+    val configFileHash = DigestUtils.sha512Hex(configFileContents)
+    logger.info(s"The config file hash is $configFileHash")
+    val actorsList = getListOfActors(configFile, sources)
     val within = generateWithin(actorsList)
     val output = readLines(aspectTemplateFile).map((line) => {
       if (line.contains("<<<ACTORS>>>")) {
@@ -35,7 +39,7 @@ object AspectsGenerationTask {
   }
 
   //TODO: Implementation of "*" and no actors list
-  private[this] def getListOfActors(configFile: File): List[String] = {
+  private[this] def getListOfActors(configFile: File, sources: Seq[File]): List[String] = {
     val config = ConfigFactory.parseFile(configFile)
     val actors = mutable.MutableList[String]()
     try {
@@ -43,11 +47,10 @@ object AspectsGenerationTask {
       for (p <- packages) {
         try {
           val pConf = config.getConfig(s"akka_debugging.$p")
-          //          val packageActors = pConf.getStringListOr("actors", () =>
-          //            getClassesFromPackage(akka.actor.Actor.getClass, p).map((`class`) => `class`.getSimpleName))
-          val packageActors = pConf.getStringList("actors")
+          val packageActors = pConf.getStringListOr("actors", () =>
+            TracedActorsFinder.findTracedActors(p, sources))
           println(packageActors)
-          actors ++= packageActors.asScala.toList.map((actor) => s"$p.$actor")
+          actors ++= packageActors.toList.map((actor) => s"$p.$actor")
         } catch {
           case e: Throwable =>
             logger.error(s"Cannot read actors for package $p", e)
@@ -63,18 +66,4 @@ object AspectsGenerationTask {
 
   private[this] def generateWithin(actors: List[String]): String =
     actors.map(actor => s"within($actor)").mkString("(", " || ", ")")
-
-  private[this] def getActors(`package`: String, config: Config): List[String] = {
-    val actors = mutable.MutableList[String]()
-    try {
-      val packageConfig = config.getConfig(s"akka_debugging.${`package`}")
-
-    } catch {
-      case e: Missing =>
-//        actors ++= getClassesFromPackage(akka.actor.Actor.getClass, `package`).map(
-//          (`class`) => s"${`package`}.${`class`.getSimpleName}")
-    }
-    actors.toList
-  }
 }
-

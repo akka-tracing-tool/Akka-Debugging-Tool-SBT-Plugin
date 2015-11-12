@@ -24,7 +24,7 @@ class MethodBang {
   @Pointcut("call(* pl.edu.agh.iet.akka_debugging.DistributedStackTrace$class.aroundReceive(..))")
   def aroundReceivePointcut(): Unit = {}
 
-  @Around("akka.MethodBangAspect.aroundReceivePointcut()")
+  @Around("akka.MethodBang.aroundReceivePointcut()")
   def aspectAroundReceive(joinPoint: ProceedingJoinPoint): AnyRef = {
     val actor = joinPoint.getArgs()(0)
 //    println(actor.getClass)
@@ -56,7 +56,7 @@ class MethodBang {
   @Pointcut("call(* akka.actor.ScalaActorRef.$bang(..)) && <<<ACTORS>>>")
   def withinUnreliable(): Unit = {}
 
-  @Around("akka.MethodBangAspect.withinUnreliable()") //actorRef is sender!
+  @Around("akka.MethodBang.withinUnreliable()") //actorRef is sender!
   def aspectA(joinPoint: ProceedingJoinPoint): Any = {
     val msg = joinPoint.getArgs()(0)
     val actorRef = joinPoint.getArgs()(1)
