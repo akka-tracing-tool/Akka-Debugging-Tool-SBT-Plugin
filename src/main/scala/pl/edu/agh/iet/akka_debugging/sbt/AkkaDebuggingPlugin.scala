@@ -26,6 +26,9 @@ object AkkaDebuggingPlugin extends AutoPlugin {
         generateAspects(sourceDirectory.value, resourceDirectory.value,
           aspectsConfigurationFile.value, sources.value)
         logger.info("Aspects generated successfully")
+      },
+      sourceGenerators <+= sourceDirectory map { dir =>
+        Seq(dir / "scala" / "akka" / "MethodBang.scala")
       }
     )
   )
