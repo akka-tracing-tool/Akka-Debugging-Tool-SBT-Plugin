@@ -44,11 +44,11 @@ trait ScalaClassDefinitionParser extends JavaTokenParsers with ScalaClassDefinit
 
 object ScalaClassDefinitionParser extends ScalaClassDefinitionParser {
 
-  def parseClassDefs(s: CharSequence): List[ClassDef] = {
-    parseClassDefs(new CharSequenceReader(s))
+  def parseClassDefinitions(s: CharSequence): List[ClassDef] = {
+    parseClassDefinitions(new CharSequenceReader(s))
   }
 
-  def parseClassDefs(input: CharSequenceReader): List[ClassDef] = {
+  def parseClassDefinitions(input: CharSequenceReader): List[ClassDef] = {
     parsePhrase(input) match {
       case Success(t, _) => t
       case NoSuccess(_, _) => List()

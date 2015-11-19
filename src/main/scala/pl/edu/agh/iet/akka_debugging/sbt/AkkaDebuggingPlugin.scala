@@ -1,8 +1,7 @@
 package pl.edu.agh.iet.akka_debugging.sbt
 
 import org.slf4j.LoggerFactory
-import pl.edu.agh.iet.akka_debugging.sbt.AspectsGenerationTask._
-import pl.edu.agh.iet.akka_debugging.sbt.TracedActorsFinder._
+import pl.edu.agh.iet.akka_debugging.sbt.FilesGenerator._
 import sbt.Keys._
 import sbt._
 
@@ -18,18 +17,17 @@ object AkkaDebuggingPlugin extends AutoPlugin {
   import Settings._
 
   val logger = LoggerFactory.getLogger(getClass)
+  var aspectFiles: Seq[File] = Seq()
 
   override lazy val projectSettings = inConfig(Compile)(
     Seq(
       aspectsConfigurationFile := "akka_debugging.conf",
       generateAspectsTask := {
-        generateAspects(sourceDirectory.value, resourceDirectory.value,
-          aspectsConfigurationFile.value, sources.value)
-        logger.info("Aspects generated successfully")
+        val parser = new ConfigParser(resourceDirectory.value / aspectsConfigurationFile.value,
+          sources.value)
+        aspectFiles = generateAspect(parser, sourceDirectory.value)
       },
-      sourceGenerators <+= sourceDirectory map { dir =>
-        Seq(dir / "scala" / "akka" / "MethodBang.scala")
-      }
+      sourceGenerators <+= sourceDirectory map { _ => aspectFiles }
     )
   )
 

@@ -12,7 +12,10 @@ import pl.edu.agh.iet.akka_debugging.collector.DatabaseCollector
 
 import scala.util.Random
 
-
+/**
+ * Auto-generated file. Please do not change.
+ * Configuration hash: <<<HASH>>>
+ */
 @Aspect
 class MethodBang {
   val configFile = getClass.getClassLoader.getResource("remote_application.conf").getFile
