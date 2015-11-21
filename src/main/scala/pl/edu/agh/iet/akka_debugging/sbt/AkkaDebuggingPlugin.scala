@@ -18,6 +18,7 @@ object AkkaDebuggingPlugin extends AutoPlugin {
 
   val logger = LoggerFactory.getLogger(getClass)
   var aspectFiles: Seq[File] = Seq()
+  var resourceFiles: Seq[File] = Seq()
 
   override lazy val projectSettings = inConfig(Compile)(
     Seq(
@@ -26,8 +27,10 @@ object AkkaDebuggingPlugin extends AutoPlugin {
         val parser = new ConfigParser(resourceDirectory.value / aspectsConfigurationFile.value,
           sources.value)
         aspectFiles = generateAspect(parser, sourceDirectory.value)
+        resourceFiles = generateResource(parser, resourceDirectory.value)
       },
-      sourceGenerators <+= sourceDirectory map { _ => aspectFiles }
+      sourceGenerators <+= sourceDirectory map { _ => aspectFiles },
+      resourceGenerators <+= resourceDirectory map { _ => resourceFiles }
     )
   )
 

@@ -2,22 +2,14 @@ package pl.edu.agh.iet.akka_debugging.sbt
 
 import java.io.File
 
-import com.typesafe.config.ConfigFactory
-import org.apache.commons.codec.digest.DigestUtils
-import org.slf4j.LoggerFactory
 import sbt.IO._
 
-import scala.collection.JavaConversions._
-import scala.collection.mutable
 import scala.io.Source
 
 object FilesGenerator {
 
-  import Implicits._
-
   private[this] val aspectTemplateFile = new File(getClass.getClassLoader.getResource("MethodBang.template").getFile)
   private[this] val aopTemplateFile = new File(getClass.getClassLoader.getResource("aop.template").getFile)
-  private[this] val logger = LoggerFactory.getLogger(getClass)
 
   def generateAspect(configurationParser: ConfigParser, sourcesDir: File): Seq[File] = {
     val hash = configurationParser.hash
@@ -48,6 +40,39 @@ object FilesGenerator {
     Seq(aspectFile)
   }
 
+  def generateResource(configurationParser: ConfigParser, resourcesDir: File): Seq[File] = {
+    val hash = configurationParser.hash
+    val resourceFile = new File(s"$resourcesDir/META-INF/aop.xml")
+
+    if (resourceFile.exists()) {
+      val regex = s"""(?s).*?Configuration hash: <$hash>.*?""".r
+      val resourceContents = Source.fromFile(resourceFile).mkString
+      resourceContents match {
+        case regex(_ *) =>
+          return Seq(resourceFile)
+        case _ =>
+      }
+    }
+
+    val packages = configurationParser.getPackages
+    val packagesTags = generatePackagesTags(packages)
+    val output = readLines(aopTemplateFile).map((line) => {
+      if (line.contains("<<<PACKAGES>>>")) {
+        line.replace("<<<PACKAGES>>>", packagesTags)
+      } else if (line.contains("<<<HASH>>>")) {
+        line.replace("<<<HASH>>>", s"<$hash>")
+      } else {
+        line
+      }
+    })
+    write(resourceFile, output.mkString(Newline))
+    Seq(resourceFile)
+  }
+
   private[this] def generateWithin(actors: List[String]): String =
     actors.map(actor => s"within($actor)").mkString("(", " || ", ")")
+
+  private[this] def generatePackagesTags(packages: List[String]): String = {
+    packages.map(`package` => s"""<include within="${`package`}..*"/>""").mkString(s"$Newline\t\t")
+  }
 }
