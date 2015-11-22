@@ -8,9 +8,7 @@ import scala.collection.mutable
 import scala.io.Source
 
 object TracedActorsFinder {
-
-  //TODO: Change it to new class name
-  val TRAIT_NAME = "DistributedStackTrace"
+  val TRAIT_NAME = "TracedActor"
 
   def findTracedActors(`package`: String, sources: Seq[File]): List[String] = {
     val packagePath = `package`.replaceAll( """\.""", """/""")

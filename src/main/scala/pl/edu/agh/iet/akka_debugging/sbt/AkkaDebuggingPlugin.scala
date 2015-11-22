@@ -26,7 +26,8 @@ object AkkaDebuggingPlugin extends AutoPlugin {
       generateAspectsTask := {
         val parser = new ConfigParser(resourceDirectory.value / aspectsConfigurationFile.value,
           sources.value)
-        aspectFiles = generateAspect(parser, sourceDirectory.value)
+        aspectFiles = generateAspect(parser, sourceDirectory.value,
+          aspectsConfigurationFile.value)
         resourceFiles = generateResource(parser, resourceDirectory.value)
       },
       sourceGenerators <+= sourceDirectory map { _ => aspectFiles },

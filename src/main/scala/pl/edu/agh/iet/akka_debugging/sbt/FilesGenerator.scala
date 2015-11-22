@@ -11,7 +11,8 @@ object FilesGenerator {
   private[this] val aspectTemplateFile = new File(getClass.getClassLoader.getResource("MethodBang.template").getFile)
   private[this] val aopTemplateFile = new File(getClass.getClassLoader.getResource("aop.template").getFile)
 
-  def generateAspect(configurationParser: ConfigParser, sourcesDir: File): Seq[File] = {
+  def generateAspect(configurationParser: ConfigParser, sourcesDir: File,
+                     configFileName: String): Seq[File] = {
     val hash = configurationParser.hash
     val aspectFile = new File(s"$sourcesDir/scala/akka/MethodBang.scala")
 
@@ -32,6 +33,8 @@ object FilesGenerator {
         line.replace("<<<ACTORS>>>", within)
       } else if (line.contains("<<<HASH>>>")) {
         line.replace("<<<HASH>>>", s"<$hash>")
+      } else if (line.contains("<<<CONFIG>>>")) {
+        line.replace("<<<CONFIG>>>", configFileName)
       } else {
         line
       }
