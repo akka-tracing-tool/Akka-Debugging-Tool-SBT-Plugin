@@ -22,7 +22,7 @@ scalaVersion := UsedScalaVersion
 libraryDependencies ++= Seq(
   "com.typesafe" % "config" % ConfigVersion,
   "org.slf4j" % "slf4j-api" % Slf4jVersion,
-  "org.slf4j" % "log4j-over-slf4j" % Slf4jVersion % "test",
+  "org.slf4j" % "slf4j-simple" % Slf4jVersion,
   "org.aspectj" % "aspectjweaver" % AspectJVersion,
   "org.aspectj" % "aspectjrt" % AspectJVersion,
   "com.typesafe.akka" %% "akka-actor" % AkkaVersion,

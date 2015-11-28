@@ -11,7 +11,7 @@ import sbt.IO.readLines
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-final case class ConfigParser(configFile: File, sources: Seq[File]) {
+final case class ConfigParser(configFile: File) {
 
   import Implicits._
 
@@ -26,11 +26,11 @@ final case class ConfigParser(configFile: File, sources: Seq[File]) {
     for (p <- packages) {
       try {
         val pConf = config.getConfig(s"akka_debugging.$p")
-        val packageActors = pConf.getStringListOr("actors", TracedActorsFinder.findTracedActors(p, sources))
+        val packageActors = pConf.getStringListOr("actors", List("*"))
         actors ++= packageActors.toList.map((actor) => s"$p.$actor")
       } catch {
         case e: Missing =>
-          actors ++= TracedActorsFinder.findTracedActors(p, sources).map((actor) => s"$p.$actor")
+          actors ++= List(s"$p.*")
       }
     }
     actors.toList

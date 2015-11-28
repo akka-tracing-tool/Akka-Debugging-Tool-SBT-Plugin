@@ -4,35 +4,38 @@ import org.slf4j.LoggerFactory
 import pl.edu.agh.iet.akka_debugging.sbt.FilesGenerator._
 import sbt.Keys._
 import sbt._
+import sbt.plugins.JvmPlugin
 
 object AkkaDebuggingPlugin extends AutoPlugin {
+  val logger = LoggerFactory.getLogger(getClass)
 
   object Settings {
-    lazy val generateAspectsTask = TaskKey[Unit]("generateAspects",
-      "Reads configuration from file and generates aspects")
+    private[sbt] lazy val configurationParser = SettingKey[ConfigParser]("configurationParser", "Internal use")
     lazy val aspectsConfigurationFile = SettingKey[String]("aspectsConfigurationFile",
       "Specifies file to read configuration from; file must be reachable from classpath")
   }
 
   import Settings._
 
-  val logger = LoggerFactory.getLogger(getClass)
-  var aspectFiles: Seq[File] = Seq()
-  var resourceFiles: Seq[File] = Seq()
+  override def requires: Plugins = JvmPlugin
 
-  override lazy val projectSettings = inConfig(Compile)(
-    Seq(
-      aspectsConfigurationFile := "akka_debugging.conf",
-      generateAspectsTask := {
-        val parser = new ConfigParser(resourceDirectory.value / aspectsConfigurationFile.value,
-          sources.value)
-        aspectFiles = generateAspect(parser, sourceDirectory.value,
-          aspectsConfigurationFile.value)
-        resourceFiles = generateResource(parser, resourceDirectory.value)
-      },
-      sourceGenerators <+= sourceDirectory map { _ => aspectFiles },
-      resourceGenerators <+= resourceDirectory map { _ => resourceFiles }
-    )
+  override lazy val projectSettings = Seq(
+    aspectsConfigurationFile in Compile := "akka_debugging.conf",
+    configurationParser := new ConfigParser(
+      (resourceDirectory in Compile).value / (aspectsConfigurationFile in Compile).value),
+    sourceGenerators in Compile += Def.task({
+      logger.info("Generating aspects...")
+      val files = generateAspect((configurationParser in Compile).value, (sourceManaged in Compile).value,
+        (aspectsConfigurationFile in Compile).value)
+      logger.info("Aspects generated.")
+      files
+    }).taskValue,
+    resourceGenerators in Compile += Def.task({
+      logger.info("Generating aspects weaving configuration...")
+      val files = generateResource((configurationParser in Compile).value, (resourceManaged in Compile).value)
+      logger.info("Aspects weaving configuration generated.")
+      files
+    }).taskValue
   )
 
 }
