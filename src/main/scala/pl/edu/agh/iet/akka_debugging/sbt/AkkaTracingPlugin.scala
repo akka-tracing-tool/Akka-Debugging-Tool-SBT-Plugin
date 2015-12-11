@@ -6,7 +6,9 @@ import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
 
-object AkkaDebuggingPlugin extends AutoPlugin {
+import scala.language.postfixOps
+
+object AkkaTracingPlugin extends AutoPlugin {
   val logger = LoggerFactory.getLogger(getClass)
 
   object Settings {
@@ -35,7 +37,13 @@ object AkkaDebuggingPlugin extends AutoPlugin {
       val files = generateResource((configurationParser in Compile).value, (resourceManaged in Compile).value)
       logger.info("Aspects weaving configuration generated.")
       files
-    }).taskValue
+    }).taskValue,
+    fork := true,
+    javaOptions += s"-javaagent:${findAspectjWeaver.value.get}"
   )
+
+  def findAspectjWeaver: Def.Initialize[Task[Option[File]]] = update map { report =>
+    report.matching(moduleFilter(organization = "org.aspectj", name = "aspectjweaver")) headOption
+  }
 
 }

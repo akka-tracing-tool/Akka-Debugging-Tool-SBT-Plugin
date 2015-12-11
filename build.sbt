@@ -11,7 +11,7 @@ val AkkaVersion = "2.3.9"
 val ScalaTestVersion = "2.2.4"
 val CommonsCodecVersion = "1.9"
 
-name := "akka-debugging-sbt"
+name := "akka-tracing-sbt"
 
 version := appVersion
 
