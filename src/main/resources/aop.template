@@ -1,0 +1,14 @@
+<!--
+    Auto-generated file. Please do not change.
+    Configuration hash: <<<HASH>>>
+-->
+
+<aspectj>
+    <aspects>
+        <aspect name="akka.MethodBang"/>
+    </aspects>
+    <weaver options="-XnoInline">
+        <<<PACKAGES>>>
+        <include within="akka.*"/>
+    </weaver>
+</aspectj>
