@@ -7,9 +7,9 @@ import akka.actor._
 import com.typesafe.config.ConfigFactory
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation._
-import pl.edu.agh.iet.akka_debugging.TracedActor
-import pl.edu.agh.iet.akka_debugging.collector.Collector.{CollectorMessage, RelationMessage}
-import pl.edu.agh.iet.akka_debugging.collector.DatabaseCollector
+import pl.edu.agh.iet.akka_tracing.TracedActor
+import pl.edu.agh.iet.akka_tracing.collector.Collector.{CollectorMessage, RelationMessage}
+import pl.edu.agh.iet.akka_tracing.collector.DatabaseCollector
 
 /**
  * Auto-generated file. Please do not change.
@@ -19,11 +19,11 @@ import pl.edu.agh.iet.akka_debugging.collector.DatabaseCollector
 class MethodBang {
   val configFile = getClass.getClassLoader.getResource("<<<CONFIG>>>").getFile
   val config = ConfigFactory.parseFile(new File(configFile)).getConfig(
-    "akka_debugging.remote")
+    "akka_tracing.remote")
   val system = ActorSystem("RemoteSystem", config)
   val collector = system.actorOf(DatabaseCollector.props(config), name = "collector")
 
-  @Pointcut("call(* pl.edu.agh.iet.akka_debugging.TracedActor$class.aroundReceive(..))")
+  @Pointcut("call(* pl.edu.agh.iet.akka_tracing.TracedActor$class.aroundReceive(..))")
   def aroundReceivePointcut(): Unit = {}
 
   @Around("akka.MethodBang.aroundReceivePointcut()")
