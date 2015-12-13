@@ -1,4 +1,4 @@
-package pl.edu.agh.iet.akka_debugging.sbt
+package pl.edu.agh.iet.akka_tracing.sbt
 
 import com.typesafe.config.Config
 

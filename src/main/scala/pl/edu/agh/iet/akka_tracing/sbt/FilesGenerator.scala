@@ -1,4 +1,4 @@
-package pl.edu.agh.iet.akka_debugging.sbt
+package pl.edu.agh.iet.akka_tracing.sbt
 
 import java.io.File
 
