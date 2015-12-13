@@ -1,4 +1,4 @@
-Akka Debugging Tool - SBT Plugin
-================================
+Akka Tracing Tool - SBT Plugin
+==============================
 
-A plugin for debugging tool.
+A plugin for tracing tool.

@@ -1,7 +1,7 @@
-package pl.edu.agh.iet.akka_debugging.sbt
+package pl.edu.agh.iet.akka_tracing.sbt
 
 import org.slf4j.LoggerFactory
-import pl.edu.agh.iet.akka_debugging.sbt.FilesGenerator._
+import FilesGenerator._
 import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
@@ -22,7 +22,7 @@ object AkkaTracingPlugin extends AutoPlugin {
   override def requires: Plugins = JvmPlugin
 
   override lazy val projectSettings = Seq(
-    aspectsConfigurationFile in Compile := "akka_debugging.conf",
+    aspectsConfigurationFile in Compile := "akka_tracing.conf",
     configurationParser := new ConfigParser(
       (resourceDirectory in Compile).value / (aspectsConfigurationFile in Compile).value),
     sourceGenerators in Compile += Def.task({

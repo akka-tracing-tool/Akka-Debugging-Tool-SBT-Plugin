@@ -1,4 +1,4 @@
-package pl.edu.agh.iet.akka_debugging.sbt
+package pl.edu.agh.iet.akka_tracing.sbt
 
 import java.io.File
 
@@ -25,7 +25,7 @@ final case class ConfigParser(configFile: File) {
     val actors = mutable.MutableList[String]()
     for (p <- packages) {
       try {
-        val pConf = config.getConfig(s"akka_debugging.$p")
+        val pConf = config.getConfig(s"akka_tracing.$p")
         val packageActors = pConf.getStringListOr("actors", List("*"))
         actors ++= packageActors.toList.map((actor) => s"$p.$actor")
       } catch {
@@ -38,7 +38,7 @@ final case class ConfigParser(configFile: File) {
 
   def getPackages: List[String] = {
     try {
-      val packages = config.getStringList("akka_debugging.packages")
+      val packages = config.getStringList("akka_tracing.packages")
       packages.asScala.toList
     } catch {
       case e: Missing =>
