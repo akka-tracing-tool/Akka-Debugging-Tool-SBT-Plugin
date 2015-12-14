@@ -7,7 +7,7 @@ import akka.actor._
 import com.typesafe.config.ConfigFactory
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation._
-import pl.edu.agh.iet.akka_tracing.TracedActor
+import pl.edu.agh.iet.akka_tracing.{MessageWrapper, TracedActor}
 import pl.edu.agh.iet.akka_tracing.collector.Collector.{CollectorMessage, RelationMessage}
 import pl.edu.agh.iet.akka_tracing.collector.DatabaseCollector
 
