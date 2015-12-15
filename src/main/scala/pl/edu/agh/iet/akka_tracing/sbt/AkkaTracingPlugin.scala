@@ -15,6 +15,8 @@ object AkkaTracingPlugin extends AutoPlugin {
     private[sbt] lazy val configurationParser = SettingKey[ConfigParser]("configurationParser", "Internal use")
     lazy val aspectsConfigurationFile = SettingKey[String]("aspectsConfigurationFile",
       "Specifies file to read configuration from; file must be reachable from classpath")
+    lazy val initDatabaseTask = TaskKey[Unit]("initDatabase", "Inits the database")
+    lazy val cleanDatabaseTask = TaskKey[Unit]("cleanDatabase", "Cleans the database")
   }
 
   import Settings._
@@ -39,7 +41,20 @@ object AkkaTracingPlugin extends AutoPlugin {
       files
     }).taskValue,
     fork := true,
-    javaOptions += s"-javaagent:${findAspectjWeaver.value.get}"
+    javaOptions += s"-javaagent:${findAspectjWeaver.value.get}",
+    initDatabaseTask := Def.task {
+      logger.info("Initializing database...")
+      val databaseTasks = new DatabaseTasks(configurationParser.value)
+      databaseTasks.initDatabase()
+      logger.info("Database initialized.")
+    },
+    cleanDatabaseTask := Def.task {
+      logger.info("Cleaning database...")
+      val databaseTasks = new DatabaseTasks(configurationParser.value)
+      databaseTasks.cleanDatabase()
+      logger.info("Database cleaned.")
+    },
+    compile in Compile <<= (compile in Compile) dependsOn initDatabaseTask
   )
 
   def findAspectjWeaver: Def.Initialize[Task[Option[File]]] = update map { report =>

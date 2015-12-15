@@ -16,7 +16,7 @@ final case class ConfigParser(configFile: File) {
   import Implicits._
 
   private[this] val logger = LoggerFactory.getLogger(getClass)
-  private[this] val config = ConfigFactory.parseFile(configFile)
+  private[sbt] val config = ConfigFactory.parseFile(configFile)
   private[this] val configLines = readLines(configFile).mkString
   private[sbt] val hash: String = DigestUtils.sha512Hex(configLines)
 
