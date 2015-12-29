@@ -1,7 +1,7 @@
 package pl.edu.agh.iet.akka_tracing.sbt
 
 import org.slf4j.LoggerFactory
-import FilesGenerator._
+import pl.edu.agh.iet.akka_tracing.sbt.FilesGenerator._
 import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
@@ -20,6 +20,8 @@ object AkkaTracingPlugin extends AutoPlugin {
   }
 
   import Settings._
+
+  val AspectJVersion = "1.7.2"
 
   override def requires: Plugins = JvmPlugin
 
@@ -42,18 +44,25 @@ object AkkaTracingPlugin extends AutoPlugin {
     }).taskValue,
     fork := true,
     javaOptions += s"-javaagent:${findAspectjWeaver.value.get}",
-    initDatabaseTask := Def.task {
+    initDatabaseTask <<= (configurationParser in Compile) map { configParser =>
       logger.info("Initializing database...")
-      val databaseTasks = new DatabaseTasks(configurationParser.value)
+      val databaseTasks = new DatabaseTasks(configParser)
       databaseTasks.initDatabase()
       logger.info("Database initialized.")
     },
-    cleanDatabaseTask := Def.task {
+    cleanDatabaseTask <<= (configurationParser in Compile) map { configParser =>
       logger.info("Cleaning database...")
-      val databaseTasks = new DatabaseTasks(configurationParser.value)
+      val databaseTasks = new DatabaseTasks(configParser)
       databaseTasks.cleanDatabase()
       logger.info("Database cleaned.")
     },
+    libraryDependencies ++= Seq(
+      "com.typesafe.slick" %% "slick-hikaricp" % "3.1.1",
+      "org.aspectj" % "aspectjweaver" % AspectJVersion,
+      "org.aspectj" % "aspectjrt" % AspectJVersion,
+      "pl.edu.agh.iet" %% "akka-tracing-core" % "0.0.2"
+    ),
+    resolvers += Resolver.url("Akka Tracing", url("https://dl.bintray.com/salceson/maven/"))(Resolver.ivyStylePatterns),
     compile in Compile <<= (compile in Compile) dependsOn initDatabaseTask
   )
 
