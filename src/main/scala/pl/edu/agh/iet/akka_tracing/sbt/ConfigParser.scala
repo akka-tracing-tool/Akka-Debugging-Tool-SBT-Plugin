@@ -3,7 +3,7 @@ package pl.edu.agh.iet.akka_tracing.sbt
 import java.io.File
 
 import com.typesafe.config.ConfigException.Missing
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.apache.commons.codec.digest.DigestUtils
 import org.slf4j.LoggerFactory
 import sbt.IO.readLines
@@ -45,5 +45,9 @@ final case class ConfigParser(configFile: File) {
         logger.error("Cannot read packages from configuration file!", e)
         throw e
     }
+  }
+
+  def getDatabaseConfig: Config = {
+    config.getConfig("akka_tracing.remote")
   }
 }
