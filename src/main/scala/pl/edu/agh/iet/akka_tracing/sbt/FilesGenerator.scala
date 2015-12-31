@@ -8,8 +8,8 @@ import scala.io.Source
 
 object FilesGenerator {
 
-  private[this] val aspectTemplateFile = new File(getClass.getClassLoader.getResource("MethodBang.template").getFile)
-  private[this] val aopTemplateFile = new File(getClass.getClassLoader.getResource("aop.template").getFile)
+  private[this] val aspectTemplateURL = getClass.getResource("/MethodBang.template")
+  private[this] val aopTemplateURL = getClass.getResource("/aop.template")
 
   def generateAspect(configurationParser: ConfigParser, sourcesDir: File,
                      configFileName: String): Seq[File] = {
@@ -28,7 +28,7 @@ object FilesGenerator {
 
     val actorsList = configurationParser.getActors
     val within = generateWithin(actorsList)
-    val output = readLines(aspectTemplateFile).map((line) => {
+    val output = readLinesURL(aspectTemplateURL).map((line) => {
       if (line.contains("<<<ACTORS>>>")) {
         line.replace("<<<ACTORS>>>", within)
       } else if (line.contains("<<<HASH>>>")) {
@@ -59,7 +59,7 @@ object FilesGenerator {
 
     val packages = configurationParser.getPackages
     val packagesTags = generatePackagesTags(packages)
-    val output = readLines(aopTemplateFile).map((line) => {
+    val output = readLinesURL(aopTemplateURL).map((line) => {
       if (line.contains("<<<PACKAGES>>>")) {
         line.replace("<<<PACKAGES>>>", packagesTags)
       } else if (line.contains("<<<HASH>>>")) {
