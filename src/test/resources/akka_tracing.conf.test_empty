@@ -1,0 +1,3 @@
+akka_tracing {
+  packages = []
+}

@@ -23,11 +23,17 @@ resolvers += Resolver.url("Akka Tracing", url("https://dl.bintray.com/salceson/m
 
 libraryDependencies ++= Seq(
   "com.typesafe" % "config" % ConfigVersion,
-  "org.slf4j" % "slf4j-api" % Slf4jVersion,
-  "org.slf4j" % "slf4j-simple" % Slf4jVersion,
+  "org.slf4j" % "slf4j-api" % Slf4jVersion % Provided,
+  "org.slf4j" % "slf4j-simple" % Slf4jVersion % Runtime,
+  "org.slf4j" % "slf4j-nop" % Slf4jVersion % Test,
   "org.scalatest" % "scalatest_2.10" % ScalaTestVersion % "test",
   "commons-codec" % "commons-codec" % CommonsCodecVersion,
-  "pl.edu.agh.iet" %% "akka-tracing-core" % "0.0.2"
+  "pl.edu.agh.iet" %% "akka-tracing-core" % "0.0.2",
+  "com.h2database" % "h2" % "1.4.190" % Test
+)
+
+(dependencyClasspath in Test) <<= (dependencyClasspath in Test).map(
+  _.filterNot(_.data.name.contains("slf4j-simple"))
 )
 
 lazy val pluginProject = project in file(".")
