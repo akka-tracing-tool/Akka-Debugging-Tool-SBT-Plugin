@@ -16,7 +16,7 @@ class ConfigParserSpec extends FlatSpec {
       List("pl.edu.agh.iet.akka_tracing.test.actors1", "pl.edu.agh.iet.akka_tracing.test.actors2"))
   }
 
-  it should "throw ConfigException.Missing when executed \"getPackages\" with missing \"packages\" key" in {
+  it should """throw ConfigException.Missing when executed "getPackages" with missing "packages" key""" in {
     intercept[ConfigException.Missing] {
       ConfigParser(fileNoPackages).getPackages
     }
@@ -27,7 +27,7 @@ class ConfigParserSpec extends FlatSpec {
       List("pl.edu.agh.iet.akka_tracing.test.actors1.Actor1", "pl.edu.agh.iet.akka_tracing.test.actors2.*"))
   }
 
-  it should "throw ConfigException.Missing when executed \"getActor\" with missing \"packages\" key" in {
+  it should """throw ConfigException.Missing when executed "getActor" with missing "packages" key""" in {
     intercept[ConfigException.Missing] {
       ConfigParser(fileNoPackages).getActors
     }

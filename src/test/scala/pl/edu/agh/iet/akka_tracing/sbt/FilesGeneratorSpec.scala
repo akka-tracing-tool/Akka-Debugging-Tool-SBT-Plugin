@@ -19,10 +19,8 @@ class FilesGeneratorSpec extends FlatSpec with BeforeAndAfterEach {
 
   it should "not generate aspect with the same configuration" in {
     val output = FilesGenerator.generateAspect(configParser, new File("."), "CONFIG_NAME").head
-    val lines = Source.fromFile(output).mkString
     val output2 = FilesGenerator.generateAspect(configParser, new File("."), "CONFIG_NAME").head
-    val lines2 = Source.fromFile(output).mkString
-    assert(lines === lines2)
+    assert(output.lastModified() === output2.lastModified())
   }
 
   it should "generate aspect when configuration changed" in {
@@ -31,6 +29,7 @@ class FilesGeneratorSpec extends FlatSpec with BeforeAndAfterEach {
     val output2 = FilesGenerator.generateAspect(ConfigParser(configFile2), new File("."), "CONFIG_NAME").head
     val lines2 = Source.fromFile(output).mkString
     assert(lines !== lines2)
+    assert(output.lastModified() !== output2.lastModified())
   }
 
   override protected def afterEach(): Unit = {
