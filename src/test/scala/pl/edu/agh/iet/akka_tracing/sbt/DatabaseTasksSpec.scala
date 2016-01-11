@@ -67,4 +67,23 @@ class DatabaseTasksSpec extends FlatSpec {
     assert(afterMessagesRowsCount === 0)
     assert(afterRelationRowsCount === 0)
   }
+
+  it should """do nothing when "initDatabase" method called more than once""" in {
+    databaseTasks.initDatabase()
+    val randomUUID = UUID.randomUUID()
+    Await.result(db.run(DBIO.seq(
+      sqlu"""insert into "messages" values(${randomUUID.toString}, 'sender', 'receiver')""",
+      sqlu"""insert into "relation" values(${randomUUID.toString}, ${randomUUID.toString})"""
+    )), 1 seconds)
+
+    databaseTasks.initDatabase()
+
+    val countMessagesQuery = sql"""select count(*) from "messages"""".as[Int]
+    val countRelationQuery = sql"""select count(*) from "relation"""".as[Int]
+    val afterMessagesRowsCount = Await.result(db.run(countMessagesQuery), 1 seconds).head
+    val afterRelationRowsCount = Await.result(db.run(countRelationQuery), 1 seconds).head
+
+    assert(afterMessagesRowsCount === 1)
+    assert(afterRelationRowsCount === 1)
+  }
 }
