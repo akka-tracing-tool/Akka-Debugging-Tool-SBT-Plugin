@@ -1,0 +1,103 @@
+package akka
+
+import java.util.UUID
+
+import akka.actor._
+import com.typesafe.config.ConfigFactory
+import org.aspectj.lang.ProceedingJoinPoint
+import org.aspectj.lang.annotation._
+import pl.edu.agh.iet.akka_tracing.collector.Collector
+import pl.edu.agh.iet.akka_tracing.config.ConfigurationReader
+import pl.edu.agh.iet.akka_tracing.{ MessageWrapper, TracedActor }
+
+/**
+  * Auto-generated file. Please do not change.
+  * Configuration hash: <<<HASH>>>
+  */
+@Aspect
+class AkkaTracingAspect {
+
+  import Collector._
+
+  import scala.concurrent.ExecutionContext.Implicits.global
+
+  private val classLoader = getClass.getClassLoader
+
+  private val config = ConfigFactory.load("<<<CONFIG>>>")
+  private val configurationReader = new ConfigurationReader(config, classLoader)
+
+  private val collector = configurationReader.getCollector
+
+  private val actorFilter = configurationReader.getActorFilter
+  private val messageFilter = configurationReader.getMessageFilter
+
+  @Pointcut("call(* akka.actor.Actor$class.aroundReceive(..))")
+  def akkaActorAroundReceivePointcut(): Unit = {}
+
+  @Pointcut("call(* pl.edu.agh.iet.akka_tracing.TracedActor$class.aroundReceive(..))")
+  def tracedActorAroundReceivePointcut(): Unit = {}
+
+  @Around("akka.AkkaTracingAspect.akkaActorAroundReceivePointcut()")
+  def aspectAroundNotTracedActorReceive(joinPoint: ProceedingJoinPoint): AnyRef = {
+    val actor = joinPoint.getArgs()(0)
+    val receive = joinPoint.getArgs()(1)
+    val message = joinPoint.getArgs()(2) match {
+      case MessageWrapper(_, msg) => msg
+      case msg => msg
+    }
+    joinPoint.proceed(Array(actor, receive, message))
+  }
+
+  @Around("akka.AkkaTracingAspect.tracedActorAroundReceivePointcut()")
+  def aspectAroundReceive(joinPoint: ProceedingJoinPoint): AnyRef = {
+    val actor = joinPoint.getArgs()(0)
+    val receive = joinPoint.getArgs()(1)
+    val message = joinPoint.getArgs()(2) match {
+      case MessageWrapper(id, msg) =>
+        if (actorFilter.apply(actor.getClass)) {
+          actor match {
+            case tracedActor: TracedActor => tracedActor.MessageWrapperId = id
+            case _ =>
+          }
+          if (messageFilter.apply(msg)) {
+            collector.handleReceiverMessage(CollectorReceiverMessage(id, actor.toString))
+          }
+        }
+        msg
+      case msg =>
+        msg
+    }
+    joinPoint.proceed(Array(actor, receive, message))
+  }
+
+  @Pointcut("call(* akka.actor.ScalaActorRef.$bang(..))")
+  def sendMessagePointcut(): Unit = {}
+
+  @Around("akka.AkkaTracingAspect.sendMessagePointcut()")
+  def aspectAroundSendMessage(joinPoint: ProceedingJoinPoint): Any = {
+    val msg = joinPoint.getArgs()(0)
+    val sender = joinPoint.getArgs()(1)
+
+    if (sender == Actor.noSender || !sender.isInstanceOf[ActorRefWithCell]) {
+      joinPoint.proceed(Array[AnyRef](msg, sender))
+      return
+    }
+
+    val actor = sender.asInstanceOf[ActorRefWithCell].underlying.asInstanceOf[ActorCell].actor
+    val uuid = UUID.randomUUID()
+
+    if (!actor.isInstanceOf[TracedActor]) {
+      joinPoint.proceed(Array[AnyRef](msg, sender))
+      return
+    }
+
+    val msgId = actor.asInstanceOf[TracedActor].MessageWrapperId
+
+    if (actorFilter.apply(actor.getClass) && messageFilter.apply(msg)) {
+      collector.handleSenderMessage(CollectorSenderMessage(uuid, actor.toString, None))
+      collector.handleRelationMessage(RelationMessage(msgId, uuid))
+    }
+
+    joinPoint.proceed(Array[AnyRef](MessageWrapper(uuid, msg), sender))
+  }
+}

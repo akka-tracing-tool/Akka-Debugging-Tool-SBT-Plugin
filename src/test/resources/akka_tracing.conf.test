@@ -3,7 +3,4 @@ akka_tracing {
     "pl.edu.agh.iet.akka_tracing.test.actors1",
     "pl.edu.agh.iet.akka_tracing.test.actors2"
   ]
-  pl.edu.agh.iet.akka_tracing.test.actors1 {
-    actors = ["Actor1"]
-  }
 }

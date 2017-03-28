@@ -2,23 +2,25 @@ package pl.edu.agh.iet.akka_tracing.sbt
 
 import java.io.File
 
+import org.apache.commons.codec.digest.DigestUtils
 import sbt.IO._
-
-import scala.io.Source
+import sbt._
 
 object FilesGenerator {
 
-  private[this] val aspectTemplateURL = getClass.getResource("/MethodBang.template")
+  private[this] val aspectTemplateURL = getClass.getResource("/AkkaTracingAspect.template")
   private[this] val aopTemplateURL = getClass.getResource("/aop.template")
 
-  def generateAspect(configurationParser: ConfigParser, sourcesDir: File,
+  def generateAspect(configFile: File,
+                     sourcesDir: File,
                      configFileName: String): Seq[File] = {
-    val hash = configurationParser.hash
-    val aspectFile = new File(s"$sourcesDir/scala/akka/MethodBang.scala")
+    val configuration = readLines(configFile).mkString
+    val hash = DigestUtils.sha512Hex(configuration)
+    val aspectFile = sourcesDir / "scala" / "akka" / "AkkaTracingAspect.scala"
 
     if (aspectFile.exists()) {
       val regex = s"""(?s).*?Configuration hash: <$hash>.*?""".r
-      val aspectContents = Source.fromFile(aspectFile).mkString
+      val aspectContents = readLines(aspectFile).mkString
       aspectContents match {
         case regex(_ *) =>
           return Seq(aspectFile)
@@ -26,12 +28,8 @@ object FilesGenerator {
       }
     }
 
-    val actorsList = configurationParser.getActors
-    val within = generateWithin(actorsList)
     val output = readLinesURL(aspectTemplateURL).map((line) => {
-      if (line.contains("<<<ACTORS>>>")) {
-        line.replace("<<<ACTORS>>>", within)
-      } else if (line.contains("<<<HASH>>>")) {
+      if (line.contains("<<<HASH>>>")) {
         line.replace("<<<HASH>>>", s"<$hash>")
       } else if (line.contains("<<<CONFIG>>>")) {
         line.replace("<<<CONFIG>>>", configFileName)
@@ -43,13 +41,15 @@ object FilesGenerator {
     Seq(aspectFile)
   }
 
-  def generateResource(configurationParser: ConfigParser, resourcesDir: File): Seq[File] = {
-    val hash = configurationParser.hash
-    val resourceFile = new File(s"$resourcesDir/META-INF/aop.xml")
+  def generateResource(configFile: File,
+                       resourcesDir: File): Seq[File] = {
+    val configuration = readLines(configFile).mkString
+    val hash = DigestUtils.sha512Hex(configuration)
+    val resourceFile = resourcesDir / "META-INF" / "aop.xml"
 
     if (resourceFile.exists()) {
       val regex = s"""(?s).*?Configuration hash: <$hash>.*?""".r
-      val resourceContents = Source.fromFile(resourceFile).mkString
+      val resourceContents = readLines(resourceFile).mkString
       resourceContents match {
         case regex(_ *) =>
           return Seq(resourceFile)
@@ -57,25 +57,21 @@ object FilesGenerator {
       }
     }
 
-    val packages = configurationParser.getPackages
-    val packagesTags = generatePackagesTags(packages)
+    val packages = new ConfigurationReader(configFile).getPackages
+
     val output = readLinesURL(aopTemplateURL).map((line) => {
-      if (line.contains("<<<PACKAGES>>>")) {
-        line.replace("<<<PACKAGES>>>", packagesTags)
-      } else if (line.contains("<<<HASH>>>")) {
+      if (line.contains("<<<HASH>>>")) {
         line.replace("<<<HASH>>>", s"<$hash>")
+      } else if (line.contains("<<<PACKAGES>>>")) {
+        line.replace(
+          "<<<PACKAGES>>>",
+          packages.map(p => s"""<include within="$p..*" />""").mkString("\n        ")
+        )
       } else {
         line
       }
     })
     write(resourceFile, output.mkString(Newline))
     Seq(resourceFile)
-  }
-
-  private[this] def generateWithin(actors: List[String]): String =
-    actors.map(actor => s"within($actor)").mkString("(", " || ", ")")
-
-  private[this] def generatePackagesTags(packages: List[String]): String = {
-    packages.map(`package` => s"""<include within="${`package`}..*"/>""").mkString(s"$Newline\t\t")
   }
 }

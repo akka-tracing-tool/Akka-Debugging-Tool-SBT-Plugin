@@ -5,10 +5,13 @@
 
 <aspectj>
     <aspects>
-        <aspect name="akka.MethodBang"/>
+        <aspect name="akka.AkkaTracingAspect"/>
     </aspects>
     <weaver options="-XnoInline">
-        <<<PACKAGES>>>
-        <include within="akka.*"/>
+        <include within="akka..*" />
+        <exclude within="akka.remote.*" />
+        <exclude within="akka.event.*" />
+        <include within="pl.edu.agh.iet.akka_tracing..*" />
+<<<PACKAGES>>>
     </weaver>
 </aspectj>
