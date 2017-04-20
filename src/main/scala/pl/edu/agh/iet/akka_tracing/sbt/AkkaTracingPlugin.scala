@@ -1,73 +1,87 @@
 package pl.edu.agh.iet.akka_tracing.sbt
 
-import org.slf4j.LoggerFactory
-import pl.edu.agh.iet.akka_tracing.sbt.FilesGenerator._
 import sbt.Keys._
 import sbt._
 import sbt.plugins.JvmPlugin
 
-import scala.language.postfixOps
-
 object AkkaTracingPlugin extends AutoPlugin {
-  val logger = LoggerFactory.getLogger(getClass)
 
-  object Settings {
-    private[sbt] lazy val configurationParser = SettingKey[ConfigParser]("configurationParser", "Internal use")
-    lazy val aspectsConfigurationFile = SettingKey[String]("aspectsConfigurationFile",
+  val AppVersion = "0.0.3"
+  val AspectJVersion = "1.8.10"
+
+  object Imports {
+    lazy val configurationFile: SettingKey[String] = SettingKey[String]("configurationFile",
       "Specifies file to read configuration from; file must be reachable from classpath")
-    lazy val initDatabaseTask = TaskKey[Unit]("initDatabase", "Inits the database")
-    lazy val cleanDatabaseTask = TaskKey[Unit]("cleanDatabase", "Cleans the database")
+    lazy val collector: SettingKey[Option[ModuleID]] = SettingKey[Option[ModuleID]]("collector",
+      "Specifies collector package to be used. Defaults to None.")
+    lazy val initDatabaseTask: TaskKey[Unit] = TaskKey[Unit]("initDatabase", "Initializes the database")
+    lazy val cleanDatabaseTask: TaskKey[Unit] = TaskKey[Unit]("cleanDatabase", "Cleans the database")
   }
 
-  import Settings._
-
-  val AspectJVersion = "1.7.2"
+  import Imports._
 
   override def requires: Plugins = JvmPlugin
 
   override lazy val projectSettings = Seq(
-    aspectsConfigurationFile in Compile := "akka_tracing.conf",
-    configurationParser := new ConfigParser(
-      (resourceDirectory in Compile).value / (aspectsConfigurationFile in Compile).value),
+    configurationFile in Compile := "akka_tracing.conf",
+    collector := None,
     sourceGenerators in Compile += Def.task({
-      logger.info("Generating aspects...")
-      val files = generateAspect((configurationParser in Compile).value, (sourceManaged in Compile).value,
-        (aspectsConfigurationFile in Compile).value)
-      logger.info("Aspects generated.")
+      val logger = streams.value.log
+      val configFile = (resourceDirectory in Compile).value / (configurationFile in Compile).value
+      logger.info("Generating aspect...")
+      val files = FilesGenerator.generateAspect(
+        configFile, (sourceManaged in Compile).value, (configurationFile in Compile).value
+      )
+      logger.info("Aspect generated.")
       files
     }).taskValue,
     resourceGenerators in Compile += Def.task({
-      logger.info("Generating aspects weaving configuration...")
-      val files = generateResource((configurationParser in Compile).value, (resourceManaged in Compile).value)
-      logger.info("Aspects weaving configuration generated.")
+      val logger = streams.value.log
+      val configFile = (resourceDirectory in Compile).value / (configurationFile in Compile).value
+      logger.info("Generating aspect weaving configuration...")
+      val files = FilesGenerator.generateResource(
+        configFile, (resourceManaged in Compile).value
+      )
+      logger.info("Aspect weaving configuration generated.")
       files
     }).taskValue,
     fork := true,
     javaOptions += s"-javaagent:${findAspectjWeaver.value.get}",
-    initDatabaseTask <<= (configurationParser in Compile) map { configParser =>
+    initDatabaseTask := {
+      val logger = streams.value.log
+      val classpath = (fullClasspath in Runtime).value
+      val config = (configurationFile in Compile).value
       logger.info("Initializing database...")
-      val databaseTasks = new DatabaseTasks(configParser)
-      databaseTasks.initDatabase()
+      DatabaseTasks.initDatabase(classpath.toList.map(_.data), logger, config)
       logger.info("Database initialized.")
     },
-    cleanDatabaseTask <<= (configurationParser in Compile) map { configParser =>
+    cleanDatabaseTask := {
+      val logger = streams.value.log
+      val classpath = (fullClasspath in Runtime).value
+      val config = (configurationFile in Compile).value
       logger.info("Cleaning database...")
-      val databaseTasks = new DatabaseTasks(configParser)
-      databaseTasks.cleanDatabase()
+      DatabaseTasks.cleanDatabase(classpath.toList.map(_.data), logger, config)
       logger.info("Database cleaned.")
     },
     libraryDependencies ++= Seq(
-      "com.typesafe.slick" %% "slick-hikaricp" % "3.1.1",
       "org.aspectj" % "aspectjweaver" % AspectJVersion,
       "org.aspectj" % "aspectjrt" % AspectJVersion,
-      "pl.edu.agh.iet" %% "akka-tracing-core" % "0.0.2"
+      "pl.edu.agh.iet" %% "akka-tracing-core" % AppVersion
     ),
-    resolvers += Resolver.url("Akka Tracing", url("https://dl.bintray.com/salceson/maven/"))(Resolver.ivyStylePatterns),
-    compile in Compile <<= (compile in Compile) dependsOn initDatabaseTask
+    libraryDependencies ++= {
+      collector.value.map(Seq(_))
+        .getOrElse({
+          val configFile = (resourceDirectory in Compile).value / (configurationFile in Compile).value
+          new ConfigurationReader(configFile)
+            .getCollectorModule(AppVersion)
+            .map(Seq(_))
+            .getOrElse(Seq())
+        })
+    },
+    resolvers += Resolver.url("Akka Tracing", url("https://dl.bintray.com/salceson/maven/"))(Resolver.ivyStylePatterns)
   )
 
-  def findAspectjWeaver: Def.Initialize[Task[Option[File]]] = update map { report =>
-    report.matching(moduleFilter(organization = "org.aspectj", name = "aspectjweaver")) headOption
+  private def findAspectjWeaver: Def.Initialize[Task[Option[File]]] = update map { report =>
+    report.matching(moduleFilter(organization = "org.aspectj", name = "aspectjweaver")).headOption
   }
-
 }

@@ -1,15 +1,15 @@
 sbtPlugin := true
 
 val org = "pl.edu.agh.iet"
-val appVersion = "0.0.2.1"
+val appVersion = "0.0.3"
 
-val UsedScalaVersion = "2.10.5"
-val Slf4jVersion = "1.7.12"
-val ConfigVersion = "1.3.0"
-val AspectJVersion = "1.7.2"
-val AkkaVersion = "2.3.9"
-val ScalaTestVersion = "2.2.4"
-val CommonsCodecVersion = "1.9"
+val UsedScalaVersion = "2.10.6"
+val Slf4jVersion = "1.7.24"
+val ConfigVersion = "1.3.1"
+val AspectJVersion = "1.8.10"
+val AkkaVersion = "2.4.17"
+val ScalaTestVersion = "3.0.1"
+val CommonsCodecVersion = "1.10"
 
 name := "akka-tracing-sbt"
 
@@ -19,21 +19,10 @@ organization := org
 
 scalaVersion := UsedScalaVersion
 
-resolvers += Resolver.url("Akka Tracing", url("https://dl.bintray.com/salceson/maven/"))(Resolver.ivyStylePatterns)
-
 libraryDependencies ++= Seq(
   "com.typesafe" % "config" % ConfigVersion,
-  "org.slf4j" % "slf4j-api" % Slf4jVersion % Provided,
-  "org.slf4j" % "slf4j-simple" % Slf4jVersion % Runtime,
-  "org.slf4j" % "slf4j-nop" % Slf4jVersion % Test,
-  "org.scalatest" % "scalatest_2.10" % ScalaTestVersion % "test",
   "commons-codec" % "commons-codec" % CommonsCodecVersion,
-  "pl.edu.agh.iet" %% "akka-tracing-core" % "0.0.2",
-  "com.h2database" % "h2" % "1.4.190" % Test
-)
-
-(dependencyClasspath in Test) <<= (dependencyClasspath in Test).map(
-  _.filterNot(_.data.name.contains("slf4j-simple"))
+  "org.scalatest" %% "scalatest" % ScalaTestVersion % Test
 )
 
 lazy val pluginProject = project in file(".")

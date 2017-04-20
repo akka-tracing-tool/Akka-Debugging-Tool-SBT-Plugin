@@ -1,32 +1,26 @@
 package pl.edu.agh.iet.akka_tracing.sbt
 
-import pl.edu.agh.iet.akka_tracing.database.DatabaseUtils
+import java.io.File
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import sbt._
 
-class DatabaseTasks(val configParser: ConfigParser)
-  extends DatabaseUtils(configParser.getDatabaseConfig) {
+object DatabaseTasks {
+  private val collectorClass = "pl.edu.agh.iet.akka_tracing.collector.PluginOperations"
 
-  import scala.concurrent.ExecutionContext.Implicits.global
-
-  def initDatabase(): Unit = {
-    Await.result(init, Duration.Inf)
-    Thread.sleep(3000)
+  def initDatabase(classPath: Seq[File], logger: Logger, configFileName: String): Unit = {
+    runProcess(classPath, logger, "init", configFileName)
   }
 
-  def cleanDatabase(): Unit = {
-    val db = dc.db
+  def cleanDatabase(classPath: Seq[File], logger: Logger, configFileName: String): Unit = {
+    runProcess(classPath, logger, "clean", configFileName)
+  }
 
-    import dc.driver.api._
-
-    val messages = TableQuery[CollectorDBMessages]
-    val relation = TableQuery[CollectorDBMessagesRelations]
-
-    Await.result(db.run(DBIO.seq(
-      messages.delete,
-      relation.delete
-    )), Duration.Inf)
-    Thread.sleep(3000)
+  private def runProcess(classPath: Seq[File],
+                         logger: Logger,
+                         task: String,
+                         configFileName: String): Unit = {
+    Process(
+      s"java -cp ${classPath.map(_.getAbsolutePath).mkString(":")} $collectorClass $task $configFileName"
+    ).run(logger).exitValue()
   }
 }
