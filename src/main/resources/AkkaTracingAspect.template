@@ -6,9 +6,13 @@ import akka.actor._
 import com.typesafe.config.ConfigFactory
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation._
+import org.json4s._
+import org.json4s.Extraction._
 import pl.edu.agh.iet.akka_tracing.collector.Collector
 import pl.edu.agh.iet.akka_tracing.config.ConfigurationReader
 import pl.edu.agh.iet.akka_tracing.{ MessageWrapper, TracedActor }
+
+import scala.util.Try
 
 /**
   * Auto-generated file. Please do not change.
@@ -30,6 +34,8 @@ class AkkaTracingAspect {
 
   private val actorFilter = configurationReader.getActorFilter
   private val messageFilter = configurationReader.getMessageFilter
+
+  private implicit val formats = DefaultFormats
 
   @Pointcut("call(* akka.actor.Actor$class.aroundReceive(..))")
   def akkaActorAroundReceivePointcut(): Unit = {}
@@ -94,7 +100,8 @@ class AkkaTracingAspect {
     val msgId = actor.asInstanceOf[TracedActor].MessageWrapperId
 
     if (actorFilter.apply(actor.getClass) && messageFilter.apply(msg)) {
-      collector.handleSenderMessage(CollectorSenderMessage(uuid, actor.toString, None))
+      val serialized = Try(decompose(msg)).toOption
+      collector.handleSenderMessage(CollectorSenderMessage(uuid, actor.toString, serialized))
       collector.handleRelationMessage(RelationMessage(msgId, uuid))
     }
 
