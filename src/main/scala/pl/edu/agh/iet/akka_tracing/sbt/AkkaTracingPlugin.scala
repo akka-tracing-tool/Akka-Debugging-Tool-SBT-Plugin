@@ -6,7 +6,7 @@ import sbt.plugins.JvmPlugin
 
 object AkkaTracingPlugin extends AutoPlugin {
 
-  val AppVersion = "0.0.3"
+  val AppVersion = "0.1"
   val AspectJVersion = "1.8.10"
 
   object Imports {
