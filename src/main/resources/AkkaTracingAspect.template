@@ -6,9 +6,13 @@ import akka.actor._
 import com.typesafe.config.ConfigFactory
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation._
-import pl.edu.agh.iet.akka_tracing.collector.Collector
+import org.json4s._
+import org.json4s.Extraction._
 import pl.edu.agh.iet.akka_tracing.config.ConfigurationReader
+import pl.edu.agh.iet.akka_tracing.model.{ MessagesRelation, ReceiverMessage, SenderMessage }
 import pl.edu.agh.iet.akka_tracing.{ MessageWrapper, TracedActor }
+
+import scala.util.Try
 
 /**
   * Auto-generated file. Please do not change.
@@ -16,8 +20,6 @@ import pl.edu.agh.iet.akka_tracing.{ MessageWrapper, TracedActor }
   */
 @Aspect
 class AkkaTracingAspect {
-
-  import Collector._
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -31,10 +33,12 @@ class AkkaTracingAspect {
   private val actorFilter = configurationReader.getActorFilter
   private val messageFilter = configurationReader.getMessageFilter
 
-  @Pointcut("call(* akka.actor.Actor$class.aroundReceive(..))")
+  private implicit val formats = DefaultFormats
+
+  @Pointcut("execution(* akka.actor.Actor$class.aroundReceive(..))")
   def akkaActorAroundReceivePointcut(): Unit = {}
 
-  @Pointcut("call(* pl.edu.agh.iet.akka_tracing.TracedActor$class.aroundReceive(..))")
+  @Pointcut("execution(* pl.edu.agh.iet.akka_tracing.TracedActor$class.aroundReceive(..))")
   def tracedActorAroundReceivePointcut(): Unit = {}
 
   @Around("akka.AkkaTracingAspect.akkaActorAroundReceivePointcut()")
@@ -60,7 +64,7 @@ class AkkaTracingAspect {
             case _ =>
           }
           if (messageFilter.apply(msg)) {
-            collector.handleReceiverMessage(CollectorReceiverMessage(id, actor.toString))
+            collector.handleReceiverMessage(ReceiverMessage(id, actor.toString))
           }
         }
         msg
@@ -70,7 +74,7 @@ class AkkaTracingAspect {
     joinPoint.proceed(Array(actor, receive, message))
   }
 
-  @Pointcut("call(* akka.actor.ScalaActorRef.$bang(..))")
+  @Pointcut("execution(* akka.actor.ScalaActorRef.$bang(..))")
   def sendMessagePointcut(): Unit = {}
 
   @Around("akka.AkkaTracingAspect.sendMessagePointcut()")
@@ -94,8 +98,9 @@ class AkkaTracingAspect {
     val msgId = actor.asInstanceOf[TracedActor].MessageWrapperId
 
     if (actorFilter.apply(actor.getClass) && messageFilter.apply(msg)) {
-      collector.handleSenderMessage(CollectorSenderMessage(uuid, actor.toString, None))
-      collector.handleRelationMessage(RelationMessage(msgId, uuid))
+      val serialized = Try(decompose(msg)).toOption
+      collector.handleSenderMessage(SenderMessage(uuid, actor.toString, serialized))
+      collector.handleRelationMessage(MessagesRelation(msgId, uuid))
     }
 
     joinPoint.proceed(Array[AnyRef](MessageWrapper(uuid, msg), sender))

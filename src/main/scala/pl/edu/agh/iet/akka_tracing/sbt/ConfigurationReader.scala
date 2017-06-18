@@ -20,11 +20,17 @@ class ConfigurationReader(configFile: File) {
     val RelationalDatabaseCollectorNames = Seq(
       "relational", "RelationalDatabaseCollector", s"$PackagePrefix.RelationalDatabaseCollector"
     )
+    val CouchDbCollectorNames = Seq(
+      "couch", "couchdb", "CouchDbCollector", s"$PackagePrefix.CouchDbCollector"
+    )
 
     collectorConfig.getOption[String]("className") flatMap {
       case s if NoOpCollectorNames contains s => None
       case s if RelationalDatabaseCollectorNames contains s => Some(
         "pl.edu.agh.iet" %% "akka-tracing-relational-db-collector" % appVersion
+      )
+      case s if CouchDbCollectorNames contains s => Some(
+        "pl.edu.agh.iet" %% "akka-tracing-couchdb-collector" % appVersion
       )
       case _ => None
     }
