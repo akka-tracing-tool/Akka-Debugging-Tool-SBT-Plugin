@@ -1,7 +1,7 @@
 sbtPlugin := true
 
 val org = "pl.edu.agh.iet"
-val appVersion = "0.1"
+val appVersion = "0.2"
 
 val UsedScalaVersion = "2.10.6"
 val Slf4jVersion = "1.7.24"
