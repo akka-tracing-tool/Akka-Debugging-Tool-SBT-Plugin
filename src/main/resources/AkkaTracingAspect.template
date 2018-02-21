@@ -7,6 +7,7 @@ import com.typesafe.config.ConfigFactory
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation._
 import org.json4s._
+import org.json4s.ext.JavaTypesSerializers
 import org.json4s.Extraction._
 import pl.edu.agh.iet.akka_tracing.config.ConfigurationReader
 import pl.edu.agh.iet.akka_tracing.model.{ MessagesRelation, ReceiverMessage, SenderMessage }
@@ -28,12 +29,12 @@ class AkkaTracingAspect {
   private val config = ConfigFactory.load("<<<CONFIG>>>")
   private val configurationReader = new ConfigurationReader(config, classLoader)
 
-  private val collector = configurationReader.getCollector
-
   private val actorFilter = configurationReader.getActorFilter
   private val messageFilter = configurationReader.getMessageFilter
 
-  private implicit val formats = DefaultFormats
+  private implicit val formats: Formats = DefaultFormats ++ JavaTypesSerializers.all
+
+  private lazy val collector = ActorSystemUtils.getCollector(configurationReader)
 
   @Pointcut("execution(* akka.actor.Actor$class.aroundReceive(..))")
   def akkaActorAroundReceivePointcut(): Unit = {}
@@ -64,12 +65,11 @@ class AkkaTracingAspect {
             case _ =>
           }
           if (messageFilter.apply(msg)) {
-            collector.handleReceiverMessage(ReceiverMessage(id, actor.toString))
+            collector ! ReceiverMessage(id, actor.toString)
           }
         }
         msg
-      case msg =>
-        msg
+      case msg => msg
     }
     joinPoint.proceed(Array(actor, receive, message))
   }
@@ -99,10 +99,16 @@ class AkkaTracingAspect {
 
     if (actorFilter.apply(actor.getClass) && messageFilter.apply(msg)) {
       val serialized = Try(decompose(msg)).toOption
-      collector.handleSenderMessage(SenderMessage(uuid, actor.toString, serialized))
-      collector.handleRelationMessage(MessagesRelation(msgId, uuid))
+      collector ! SenderMessage(uuid, actor.toString, serialized)
+      collector ! MessagesRelation(msgId, uuid)
     }
 
     joinPoint.proceed(Array[AnyRef](MessageWrapper(uuid, msg), sender))
   }
+}
+
+private[akka] object ActorSystemUtils {
+  private lazy val actorSystem: ActorSystem = ActorSystem("akka_tracing_collector_actor_system")
+  def getCollector(configurationReader: ConfigurationReader): ActorRef =
+    configurationReader.createCollector(actorSystem)
 }
